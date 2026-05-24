@@ -1,6 +1,4 @@
-  name: FGO Login Debug
-  env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+name: FGO Login Debug - Full
 
 on:
   workflow_dispatch:
@@ -17,30 +15,30 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: List files (debug)
-        run: |
-          pwd
-          ls -la
-          ls -la .github/ 2>/dev/null || echo "No .github folder"
-
       - name: Install requirements
         run: |
           python -m pip install --upgrade pip
           pip install -r https://raw.githubusercontent.com/O-Isaac/FGO-Daily-Login/master/requirements.txt
 
-      - name: Check if main.py exists
+      - name: List all Python files
         run: |
-          if [ -f "main.py" ]; then
-            echo "main.py found"
-            head -20 main.py
-          else
-            echo "ERROR: main.py NOT found!"
-            echo "Files in current directory:"
-            ls -la
-          fi
+          echo "=== Python files in repo ==="
+          find . -name "*.py" -type f
+          echo "=== Current directory contents ==="
+          ls -la
 
-      - name: Run main script
-        run: python3 main.py
+      - name: Check secret status (not values)
+        run: |
+          echo "Checking if secrets are set (values hidden)..."
+          [ -n "${{ secrets.GAME_USERIDS }}" ] && echo "✓ GAME_USERIDS is set" || echo "✗ GAME_USERIDS is MISSING"
+          [ -n "${{ secrets.GAME_AUTHKEYS }}" ] && echo "✓ GAME_AUTHKEYS is set" || echo "✗ GAME_AUTHKEYS is MISSING"
+          [ -n "${{ secrets.GAME_SECRETKEYS }}" ] && echo "✓ GAME_SECRETKEYS is set" || echo "✗ GAME_SECRETKEYS is MISSING"
+          [ -n "${{ secrets.GAME_USERAGENT }}" ] && echo "✓ GAME_USERAGENT is set" || echo "✗ GAME_USERAGENT is MISSING"
+          [ -n "${{ secrets.GAME_REGION }}" ] && echo "✓ GAME_REGION is set (value: ${{ secrets.GAME_REGION }})" || echo "✗ GAME_REGION is MISSING"
+
+      - name: Run main script with full error output
+        run: |
+          python3 -u main.py 2>&1
         env:
           userIds: ${{ secrets.GAME_USERIDS }}
           authKeys: ${{ secrets.GAME_AUTHKEYS }}
@@ -48,3 +46,9 @@ jobs:
           UserAgent: ${{ secrets.GAME_USERAGENT }}
           fateRegion: ${{ secrets.GAME_REGION }}
           webhookDiscord: ${{ secrets.DISCORD_WEBHOOK }}
+        continue-on-error: true
+
+      - name: Show Python version and installed packages
+        run: |
+          python --version
+          pip list | grep -E "requests|selenium|beautifulsoup|pycryptodome|cryptography" || echo "No key packages found"
