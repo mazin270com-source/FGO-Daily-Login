@@ -1,6 +1,6 @@
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   name: FGO Login Debug
+  env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 on:
   workflow_dispatch:
