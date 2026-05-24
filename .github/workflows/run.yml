@@ -1,23 +1,13 @@
-name: FGO Login System
+name: FGO Login Debug
 
 on:
-  push:
-    branches: [master]
-  pull_request:
-    branches: [master]
-  schedule:
-    - cron: "30 10 * * *"
   workflow_dispatch:
 
 jobs:
-  build:
+  debug:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: [3.11]
-
     steps:
-      - name: Gettings files from Repo
+      - name: Checkout repo
         uses: actions/checkout@v4
 
       - name: Setup Python
@@ -25,12 +15,30 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install Requeriments
-        run: pip install -r https://raw.githubusercontent.com/O-Isaac/FGO-Daily-Login/master/requirements.txt
-
-      - name: Execute main script
+      - name: List files (debug)
         run: |
-          python3 main.py
+          pwd
+          ls -la
+          ls -la .github/ 2>/dev/null || echo "No .github folder"
+
+      - name: Install requirements
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r https://raw.githubusercontent.com/O-Isaac/FGO-Daily-Login/master/requirements.txt
+
+      - name: Check if main.py exists
+        run: |
+          if [ -f "main.py" ]; then
+            echo "main.py found"
+            head -20 main.py
+          else
+            echo "ERROR: main.py NOT found!"
+            echo "Files in current directory:"
+            ls -la
+          fi
+
+      - name: Run main script
+        run: python3 main.py
         env:
           userIds: ${{ secrets.GAME_USERIDS }}
           authKeys: ${{ secrets.GAME_AUTHKEYS }}
